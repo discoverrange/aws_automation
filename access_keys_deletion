@@ -1,0 +1,43 @@
+import json
+import boto3
+from datetime import datetime
+from datetime import timedelta
+from botocore.exceptions import ClientError
+import requests
+import os
+
+date_now = datetime.now()
+iam_client = boto3.client('iam')
+iam = boto3.resource('iam')
+max_idle_days = 90
+max_items = 50
+
+
+def lambda_handler(event, context):
+        res_users = iam_client.list_users()
+        #print(res_users)
+        for user in res_users[ 'Users' ]:
+         # print(user)
+          username = user['UserName']
+          #print(username)
+          response = iam_client.list_access_keys(UserName=username,MaxItems=2)
+         #print(response)
+          for key in response[ 'AccessKeyMetadata' ]:
+               # print(key)
+                access_key_status = key[ 'Status' ] 
+               # print(access_key_status)
+                if access_key_status == "Inactive":
+                 #print(key)
+                 access_id = key[ 'AccessKeyId' ]
+                 #print(access_id)
+                 key_last = iam_client.get_access_key_last_used(AccessKeyId=access_id)
+                 if 'LastUsedDate' in key_last[ 'AccessKeyLastUsed' ]:
+                    last_used_date = key_last[ 'AccessKeyLastUsed' ][ 'LastUsedDate' ].replace(tzinfo=None)
+                    date_now = datetime.now()
+                    difference = date_now - last_used_date
+                    print(difference)
+                    max_idle_days = 30
+                    if difference.days > max_idle_days :
+                       print(username)
+                       print(access_id)
+                       iam_client.delete_access_key(AccessKeyId=access_id,UserName=username)
