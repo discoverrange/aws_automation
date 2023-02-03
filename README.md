@@ -4,7 +4,7 @@ Lamda function
 In this we are using boto3 libary, The lamda function will delete the inactive access keys for than 30 days.
 
 Attach the following role to the lamda with the below inline policy
-
+```
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -31,3 +31,4 @@ Attach the following role to the lamda with the below inline policy
         }
     ]
 }
+```
